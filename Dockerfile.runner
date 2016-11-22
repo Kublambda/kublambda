@@ -1,0 +1,5 @@
+FROM scratch
+MAINTAINER Jared Rosoff <forjared@gmail.com>
+ADD ./kublambda-runner /kublambda-runner
+ENTRYPOINT ["/kublambda-runner"]
+

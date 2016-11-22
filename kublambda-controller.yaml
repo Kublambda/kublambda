@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: "kublambda"
+  name: "kublambda"
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: "kublambda"
+      name: "kublambda controller"
+    spec:
+      containers:
+        - name: "kublambda-controller"
+          image: "forjared/kublambda-controller"
+        - name: "kubelet"
+          image: "kelseyhightower/kubectl:1.4.0"
+          args:
+            - "proxy"
+

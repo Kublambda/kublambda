@@ -1,0 +1,5 @@
+FROM scratch
+MAINTAINER Jared Rosoff <forjared@gmail.com>
+ADD ./kublambda-controller /kublambda-controller
+ENTRYPOINT ["/kublambda-controller"]
+
