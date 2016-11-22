@@ -2,12 +2,12 @@ Kublambda - lambda for kubernetes
 
 Features: 
 - new third party resource called "lambda" 
--- name of lambda function 
--- source code of lambda function 
--- events that should trigger lambda function 
----- http
----- resource watch 
--- names of state tables for lambda 
+    - name of lambda function 
+    - source code of lambda function 
+    - events that should trigger lambda function 
+        - http
+        - resource watch 
+    - names of state tables for lambda 
 
 Third party resource 'lambda' 
 -----------------------------
@@ -16,15 +16,19 @@ When kublambda is installed, it creates a new resource called "lambda". It also 
 - the source code of the lambda
 - the events that can trigger the lambda 
 
-The controller takes care of processing the source code to turn it into an executable asset. This executable is stored in a registry (another tpr?).
+The controller takes care of processing the source code to turn it into an executable asset. This executable is stored in an object store.
+
+Calling a Lambda 
+----------------
+A request arrives at hte runner service with some URI. The service forwards the request to an available runner. The runner uses the PATH portion of the request as a key to lookup into the source code store. The resulting binary is executed for the request, being passed the original http request. 
 
 Horizontal autoscaling
 --------------------------
-When a lambda is created, the controller will create a service and a deployment and autoscaler for the lambda, using a docker-containerized version of the user's source code. At this point, autoscaler requires the minimum node count to be 1 (or greater), so there will always be at least one instance of the function, even if it's idle. But the k8s docs state that a future goal is to allow the minimal number of pods to be 0. This setup allows the system to allocate more pods to the lambda if load increases, and remove that allocation as load falls.   
+The system runs a Deployment of lambda runners. An autoscaler looks over the pool of runner pods, and auto-scales the replicaset of runners in response to load. 
 
 HTTP trigger lambdas
 --------------------
-If HTTP is enabled as a trigger, the controller will create an ingress resource, and or service-type (nodeport or load balancer) for the service backing the function. This will cause the service to be exposed outside of the kubernetes cluster. The URL of the lambda is stored as a read-only property in the lambda resource. 
+If HTTP is enabled as a trigger, the controller will create an ingress resource for the service backing the function. This will cause the service to be exposed outside of the kubernetes cluster. The URL of the lambda is stored as a read-only property in the lambda resource. 
 
 Resource event triggering of lambdas
 ----------------------------------
@@ -34,39 +38,3 @@ If a resource event is specified for a lambda, the controller will launch a pod 
 Lambda image management
 -----------------------
 The Lambda controller automatically builds a container image for the user code and pushes it to the container registry. The lambda controller can automatically delete these images when lambdas are deleted. The image uri is stored as a read-only property in the lambda tpr. 
-
-
-
-scenario: create a new lambda tpr 
------------------------------
-inputs:
-- name
-- code (file or zipfile) 
-- triggers 
-
-procedure: 
-1. launch a pod to build the source code 
-2. executes buildpack for code
-3. stores binary in storage somewhere? 
-4. creates service, deployment & autoscaler for function
-5. if http trigger specified, create ingres for function
-6. if event trigger specified, create event-controller for function 
-
-scneario: change code in running lambda
----------------------------------------
-procedure: 
-1. launch a pod to build the source code
-2. executes buildpack for code 
-3. stores binary in storage somewhere? 
-4. updates deployment to new image name 
-5. rollout change to deployment 
-
-design thoughts: 
-- instead of running a deployment per function, we can have one big deployment
-- each pod in the deployment runs a runtime that can execute any lambda
-- request arrives at any pod in cluster
-- pod checks to see if it has code for function in cache 
-- if not, fetch code from object storage store it in cache
-- run user code in a sandbox 
-- return results to caller 
-
