@@ -34,7 +34,3 @@ Resource event triggering of lambdas
 ----------------------------------
 If a resource event is specified for a lambda, the controller will launch a pod that implements a watch-loop on the specified resource stream. For each event in the stream, it will evaluate the condition specified in the lambda tpr and, if it matches, call the lambda's service. 
 
-
-Lambda image management
------------------------
-The Lambda controller automatically builds a container image for the user code and pushes it to the container registry. The lambda controller can automatically delete these images when lambdas are deleted. The image uri is stored as a read-only property in the lambda tpr. 
